@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS Issues & Impact — Gamified Lessons</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ── RESET & BASE ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Space Mono', monospace;
+    background: #0a0a0f;
+    color: #e8e8f0;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── CSS VARIABLES ── */
+  :root {
+    --bg:        #0a0a0f;
+    --surface:   #111118;
+    --surface2:  #1a1a25;
+    --border:    rgba(255,255,255,0.07);
+    --border2:   rgba(255,255,255,0.12);
+    --text:      #e8e8f0;
+    --muted:     #7a7a99;
+    --cyber:     #00e5ff;
+    --env:       #39ff6a;
+    --eth:       #ff6b35;
+    --legal:     #c77dff;
+    --accent:    #ffd60a;
+
+    /* chapter colours */
+    --c-cyber-bg:  rgba(0,229,255,0.08);
+    --c-cyber-bd:  rgba(0,229,255,0.25);
+    --c-env-bg:    rgba(57,255,106,0.08);
+    --c-env-bd:    rgba(57,255,106,0.25);
+    --c-eth-bg:    rgba(255,107,53,0.08);
+    --c-eth-bd:    rgba(255,107,53,0.25);
+    --c-legal-bg:  rgba(199,125,255,0.08);
+    --c-legal-bd:  rgba(199,125,255,0.25);
+
+    --radius:  6px;
+    --radius-lg: 10px;
+  }
+
+  /* ── LAYOUT ── */
+  .app { max-width: 680px; margin: 0 auto; padding: 0 1rem 4rem; }
+
+  /* ── SCREENS ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── TOP NAV ── */
+  .topnav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem; height: 50px;
+    margin: 0 -1rem 0;
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 0.85rem;
+    letter-spacing: 0.1em; color: var(--cyber);
+  }
+  .nav-stats { display: flex; gap: 1.2rem; }
+  .nav-stat { font-size: 0.7rem; color: var(--muted); display: flex; align-items: center; gap: 0.3rem; }
+  .nav-stat span { color: var(--text); font-weight: 700; }
+
+  /* ── HUB ── */
+  .hub-hero { padding: 2rem 0 1.5rem; }
+  .hub-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 800; line-height: 1.05;
+    letter-spacing: -0.02em; margin-bottom: 0.5rem;
+  }
+  .hub-title em { color: var(--cyber); font-style: normal; }
+  .hub-sub { font-size: 0.78rem; color: var(--muted); line-height: 1.8; max-width: 480px; }
+
+  .stats-strip {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; margin: 1.5rem 0;
+  }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 14px;
+  }
+  .stat-card .sv {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem; font-weight: 800;
+    color: var(--text); line-height: 1;
+  }
+  .stat-card .sl { font-size: 0.65rem; color: var(--muted); margin-top: 4px; letter-spacing: 0.05em; }
+
+  /* chapter blocks */
+  .chapter-block { margin-bottom: 2rem; }
+  .ch-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ch-icon {
+    width: 34px; height: 34px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+  .ch-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem; font-weight: 700; color: var(--text);
+  }
+  .ch-sub { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+
+  .lessons-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .lesson-row {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 14px;
+    cursor: pointer; display: flex; align-items: center; gap: 12px;
+    transition: border-color 0.15s, background 0.15s;
+    text-decoration: none;
+  }
+  .lesson-row:hover { border-color: var(--border2); background: var(--surface2); }
+
+  .lesson-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  .lesson-info { flex: 1; min-width: 0; }
+  .lesson-name { font-size: 0.85rem; font-weight: 700; color: var(--text); }
+  .lesson-meta { font-size: 0.68rem; color: var(--muted); margin-top: 3px; }
+
+  .lesson-prog-wrap {
+    height: 3px; border-radius: 2px;
+    background: var(--surface2); margin-top: 7px; overflow: hidden;
+  }
+  .lesson-prog-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
+
+  .lesson-badge {
+    font-size: 0.65rem; padding: 3px 9px;
+    border-radius: 20px; font-weight: 700;
+    white-space: nowrap; flex-shrink: 0;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── BACK BTN ── */
+  .back-btn {
+    background: none; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 5px 12px;
+    cursor: pointer; font-size: 0.72rem; color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .back-btn:hover { border-color: var(--border2); color: var(--text); }
+
+  /* ── FLASHCARD SCREEN ── */
+  .fc-wrap { padding: 1.5rem 0; }
+
+  .fc-top {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem;
+  }
+  .fc-lesson-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem; font-weight: 700; color: var(--text); flex: 1;
+  }
+
+  .fc-concepts {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px; margin-bottom: 1.2rem;
+  }
+  .fc-kc-title {
+    font-size: 0.65rem; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px;
+  }
+  .fc-kc-item {
+    display: flex; gap: 8px; font-size: 0.75rem;
+    color: var(--muted); padding: 3px 0; line-height: 1.6;
+  }
+  .fc-kc-bullet {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--muted); flex-shrink: 0; margin-top: 7px;
+  }
+
+  .fc-prog-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 1rem;
+  }
+  .fc-dots { display: flex; gap: 4px; flex: 1; }
+  .fc-dot { height: 4px; border-radius: 2px; flex: 1; transition: background 0.3s; }
+  .fc-count { font-size: 0.68rem; color: var(--muted); white-space: nowrap; }
+
+  /* flip card */
+  .fc-card-area { perspective: 1000px; margin-bottom: 1rem; cursor: pointer; }
+  .fc-card {
+    position: relative; width: 100%; min-height: 200px;
+    transition: transform 0.45s; transform-style: preserve-3d;
+  }
+  .fc-card.flipped { transform: rotateY(180deg); }
+  .fc-face {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    display: flex; flex-direction: column;
+    padding: 22px 20px; min-height: 200px;
+  }
+  .fc-back { transform: rotateY(180deg); }
+  .fc-tag {
+    font-size: 0.62rem; letter-spacing: 0.15em;
+    text-transform: uppercase; font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .fc-term {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.2rem; font-weight: 700;
+    color: var(--text); flex: 1;
+    display: flex; align-items: center;
+    line-height: 1.3;
+  }
+  .fc-definition {
+    font-size: 0.8rem; color: var(--muted);
+    line-height: 1.8; flex: 1;
+  }
+  .fc-hint {
+    font-size: 0.68rem; color: var(--muted);
+    margin-top: 14px; opacity: 0.6;
+  }
+
+  .fc-nav {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; margin-bottom: 1rem;
+  }
+  .fc-nav-btn {
+    padding: 10px; border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer; font-size: 0.78rem;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .fc-nav-btn:hover:not(:disabled) { border-color: var(--border2); color: var(--text); }
+  .fc-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .fc-start-quiz {
+    width: 100%; padding: 14px;
+    border-radius: var(--radius-lg);
+    border: none;
+    background: var(--cyber); color: #000;
+    font-size: 0.9rem; font-weight: 700;
+    cursor: pointer; letter-spacing: 0.05em;
+    font-family: 'Space Mono', monospace;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .fc-start-quiz:hover { opacity: 0.88; }
+  .fc-start-quiz:active { transform: scale(0.99); }
+
+  /* ── GAME SCREEN ── */
+  .game-wrap { padding: 1.5rem 0; }
+
+  .game-top {
+    display: flex; align-items: center;
+    gap: 10px; margin-bottom: 1.2rem;
+  }
+  .g-prog-wrap {
+    flex: 1; background: var(--surface2);
+    border-radius: 20px; height: 6px; overflow: hidden;
+  }
+  .g-prog-fill {
+    height: 100%; border-radius: 20px;
+    background: var(--cyber);
+    transition: width 0.4s ease;
+    box-shadow: 0 0 6px var(--cyber);
+  }
+  .q-counter { font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+
+  .streak-bar {
+    display: none; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 7px 12px;
+    margin-bottom: 10px;
+    font-size: 0.75rem; color: var(--muted);
+  }
+  .streak-bar.show { display: flex; }
+  .streak-bar strong { color: var(--accent); }
+
+  .topic-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.65rem; padding: 3px 10px;
+    border-radius: 20px; font-weight: 700;
+    margin-bottom: 12px; letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .q-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px 18px 16px;
+    margin-bottom: 12px; min-height: 90px;
+  }
+  .q-type {
+    font-size: 0.6rem; color: var(--muted);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .q-text { font-size: 0.9rem; color: var(--text); line-height: 1.65; }
+
+  .opts { display: grid; gap: 7px; }
+
+  .opt {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 11px 14px;
+    cursor: pointer; text-align: left;
+    font-size: 0.78rem; color: var(--text);
+    display: flex; align-items: center; gap: 10px;
+    transition: border-color 0.1s, background 0.1s;
+    font-family: 'Space Mono', monospace;
+  }
+  .opt:hover:not([disabled]) { border-color: var(--border2); background: var(--surface2); }
+  .opt .ol {
+    width: 24px; height: 24px; border-radius: 5px;
+    background: var(--surface2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.68rem; font-weight: 700; color: var(--muted);
+    flex-shrink: 0;
+  }
+  .opt.correct { background: rgba(57,255,106,0.08); border-color: rgba(57,255,106,0.4); }
+  .opt.correct .ol { background: #39ff6a; color: #000; border-color: #39ff6a; }
+  .opt.wrong   { background: rgba(255,70,70,0.08); border-color: rgba(255,70,70,0.4); }
+  .opt.wrong   .ol { background: #ff4646; color: #fff; border-color: #ff4646; }
+
+  .fb-box {
+    display: none; border-radius: var(--radius);
+    padding: 12px 14px; margin-top: 8px;
+    font-size: 0.76rem; line-height: 1.75;
+  }
+  .fb-box.show { display: block; }
+  .fb-box.cfb {
+    background: rgba(57,255,106,0.06);
+    border: 1px solid rgba(57,255,106,0.25); color: #a8f0bb;
+  }
+  .fb-box.wfb {
+    background: rgba(255,70,70,0.06);
+    border: 1px solid rgba(255,70,70,0.25); color: #f0a8a8;
+  }
+  .fb-box .fbt { font-weight: 700; font-size: 0.82rem; margin-bottom: 4px; }
+
+  .cont-btn {
+    width: 100%; padding: 13px;
+    border-radius: var(--radius-lg); border: none;
+    background: var(--cyber); color: #000;
+    font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; margin-top: 12px;
+    display: none; letter-spacing: 0.05em;
+    font-family: 'Space Mono', monospace;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .cont-btn.show { display: block; }
+  .cont-btn:hover { opacity: 0.88; }
+  .cont-btn:active { transform: scale(0.99); }
+
+  /* ── GAME OVER ── */
+  .go-wrap { padding: 1.5rem 0; }
+
+  .go-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 26px 22px;
+    text-align: center; margin-bottom: 1rem;
+  }
+  .go-icon { font-size: 3rem; margin-bottom: 10px; }
+  .go-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem; font-weight: 800;
+    color: var(--text); margin-bottom: 6px;
+  }
+  .go-sub { font-size: 0.76rem; color: var(--muted); line-height: 1.75; margin-bottom: 18px; }
+  .go-score {
+    font-family: 'Syne', sans-serif;
+    font-size: 3.5rem; font-weight: 800;
+    color: var(--cyber); line-height: 1;
+    margin-bottom: 4px;
+    text-shadow: 0 0 20px rgba(0,229,255,0.3);
+  }
+  .go-score-label { font-size: 0.68rem; color: var(--muted); margin-bottom: 20px; letter-spacing: 0.05em; }
+
+  .go-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .go-stat {
+    background: var(--surface2); border-radius: var(--radius);
+    padding: 10px 6px;
+  }
+  .go-stat .gsv {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.2rem; font-weight: 800; color: var(--text);
+  }
+  .go-stat .gsl { font-size: 0.62rem; color: var(--muted); margin-top: 3px; }
+
+  .review-section { margin-bottom: 1rem; }
+  .review-title {
+    font-size: 0.65rem; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin: 1.2rem 0 0.6rem;
+  }
+  .wrong-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 10px 12px;
+    margin-bottom: 6px;
+    font-size: 0.72rem; color: var(--muted); line-height: 1.65;
+  }
+  .wrong-item strong { color: var(--text); font-weight: 700; display: block; margin-bottom: 3px; }
+
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sbtn {
+    padding: 12px; border-radius: var(--radius-lg);
+    font-size: 0.8rem; font-weight: 700;
+    cursor: pointer; transition: opacity 0.15s;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.04em;
+  }
+  .sbtn.primary { background: var(--cyber); color: #000; border: none; }
+  .sbtn.secondary {
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .sbtn:hover { opacity: 0.8; }
+
+  /* combo pop */
+  .combo-pop {
+    display: none; position: fixed;
+    top: 40%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
+    background: var(--accent); color: #000;
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem; font-weight: 800;
+    padding: 12px 24px; border-radius: var(--radius-lg);
+    z-index: 999; pointer-events: none;
+    opacity: 0; transition: opacity 0.2s, transform 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .combo-pop.pop { display: block; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .combo-pop.fade { opacity: 0; transform: translate(-50%, -50%) scale(1.08); }
+
+  /* progress bar at top */
+  #page-progress {
+    position: fixed; top: 0; left: 0;
+    height: 2px; background: var(--cyber);
+    z-index: 100; width: 0%;
+    box-shadow: 0 0 6px var(--cyber);
+    transition: width 0.1s;
+  }
+</style>
+</head>
+<body>
+
+<div id="page-progress"></div>
+
+<!-- ══ TOP NAV ══ -->
+<nav class="topnav">
+  <div class="nav-logo">CS — ISSUES &amp; IMPACT</div>
+  <div class="nav-stats">
+    <div class="nav-stat">🔥 <span id="nav-streak">0</span></div>
+    <div class="nav-stat">⭐ <span id="nav-xp">0</span> XP</div>
+  </div>
+</nav>
+
+<!-- ══ APP ══ -->
+<div class="app">
+
+  <!-- HUB -->
+  <div id="screen-hub" class="screen active">
+    <div class="hub-hero">
+      <div class="hub-title">CS Issues<br><em>&amp; Impact</em></div>
+      <div class="hub-sub">Study flashcards first, then survive the quiz. Your run ends the moment you get one wrong.</div>
+    </div>
+
+    <div class="stats-strip">
+      <div class="stat-card">
+        <div class="sv" id="h-streak">0</div>
+        <div class="sl">Best streak</div>
+      </div>
+      <div class="stat-card">
+        <div class="sv" id="h-total">0</div>
+        <div class="sl">Questions done</div>
+      </div>
+      <div class="stat-card">
+        <div class="sv" id="h-xp">0</div>
+        <div class="sl">Total XP</div>
+      </div>
+    </div>
+
+    <div id="chapters-list"></div>
+  </div>
+
+  <!-- FLASHCARD INTRO -->
+  <div id="screen-fc" class="screen">
+    <div class="fc-wrap">
+      <div class="fc-top">
+        <button class="back-btn" onclick="goHub()">← Back</button>
+        <div class="fc-lesson-title" id="fc-lesson-name"></div>
+      </div>
+
+      <div class="fc-concepts" id="fc-concepts"></div>
+
+      <div class="fc-prog-row">
+        <div class="fc-dots" id="fc-dots"></div>
+        <div class="fc-count" id="fc-count">1 / 1</div>
+      </div>
+
+      <div class="fc-card-area" onclick="flipCard()">
+        <div class="fc-card" id="fc-card">
+          <div class="fc-face fc-front">
+            <div class="fc-tag" id="fc-front-tag">Term</div>
+            <div class="fc-term" id="fc-front-term"></div>
+            <div class="fc-hint">↻ Tap to reveal definition</div>
+          </div>
+          <div class="fc-face fc-back">
+            <div class="fc-tag" id="fc-back-tag">Definition</div>
+            <div class="fc-definition" id="fc-back-def"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fc-nav">
+        <button class="fc-nav-btn" id="fc-prev" onclick="fcNav(-1)">← Prev</button>
+        <button class="fc-nav-btn" id="fc-next" onclick="fcNav(1)">Next →</button>
+      </div>
+
+      <button class="fc-start-quiz" onclick="startQuiz()">Start quiz →</button>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="screen-game" class="screen">
+    <div class="game-wrap">
+      <div class="game-top">
+        <button class="back-btn" onclick="goHub()">← Exit</button>
+        <div class="g-prog-wrap"><div class="g-prog-fill" id="g-prog" style="width:0%"></div></div>
+        <div class="q-counter" id="g-qcount">1/10</div>
+      </div>
+      <div class="streak-bar" id="g-streak">
+        ⚡ <strong id="g-streak-txt">3 in a row!</strong> Keep going!
+      </div>
+      <div id="g-pill"></div>
+      <div class="q-box">
+        <div class="q-type">Multiple choice</div>
+        <div class="q-text" id="g-qtxt"></div>
+      </div>
+      <div class="opts" id="g-opts"></div>
+      <div class="fb-box" id="g-fb">
+        <div class="fbt" id="g-fb-t"></div>
+        <div id="g-fb-b"></div>
+      </div>
+      <button class="cont-btn" id="g-cont" onclick="nextQ()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div id="screen-go" class="screen">
+    <div class="go-wrap">
+      <div class="go-card">
+        <div class="go-icon" id="go-ico"></div>
+        <div class="go-title" id="go-ttl"></div>
+        <div class="go-sub" id="go-sub"></div>
+        <div class="go-score" id="go-sc"></div>
+        <div class="go-score-label">correct answers</div>
+        <div class="go-stats">
+          <div class="go-stat"><div class="gsv" id="go-str"></div><div class="gsl">Best streak</div></div>
+          <div class="go-stat"><div class="gsv" id="go-xp"></div><div class="gsl">XP earned</div></div>
+          <div class="go-stat"><div class="gsv" id="go-acc"></div><div class="gsl">Accuracy</div></div>
+        </div>
+      </div>
+      <div id="go-review"></div>
+      <div class="btn-row">
+        <button class="sbtn secondary" onclick="goHub()">← Chapters</button>
+        <button class="sbtn primary" onclick="retryLesson()">↺ Retry</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<div class="combo-pop" id="combo-pop"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   DATA — CHAPTERS / LESSONS / FLASHCARDS / QUESTIONS
+═══════════════════════════════════════════════════════════ */
+const CHAPTERS = [
+  {
+    id: 'cyber',
+    name: 'Cybersecurity',
+    icon: '🔐',
+    color: '#00e5ff',
+    bg: 'rgba(0,229,255,0.10)',
+    bd: 'rgba(0,229,255,0.25)',
+    lessons: [
+      {
+        id: 'cyber1',
+        name: 'Encryption Fundamentals',
+        meta: 'Symmetric, asymmetric, hashing & PKI',
+        flashcards: [
+          { term: 'Symmetric Encryption', def: 'Uses one shared key for both encrypting and decrypting. Fast for large data but the key must be exchanged securely. Gold standard: AES-256.' },
+          { term: 'Asymmetric Encryption (PKI)', def: 'Uses a mathematically linked key pair — a public key (shared openly) and a private key (kept secret). Underpins HTTPS, SSH, and email signing. Examples: RSA, ECC.' },
+          { term: 'AES-256', def: 'Advanced Encryption Standard with a 256-bit key. The gold standard for symmetric encryption used by governments and militaries worldwide. Practically unbreakable with current hardware.' },
+          { term: 'Hashing', def: 'A one-way function producing a fixed-length digest. Cannot be reversed. Used to store passwords securely and verify file integrity. Examples: SHA-256, bcrypt.' },
+          { term: 'Salting', def: 'Adding unique random data to a password before hashing it. Prevents rainbow table attacks — two identical passwords produce different hashes after salting.' },
+          { term: 'End-to-End Encryption (E2EE)', def: 'Messages encrypted on the sender\'s device, decryptable only on the recipient\'s. The service provider cannot read content. Used in Signal, WhatsApp, iMessage.' },
+          { term: 'Diffie-Hellman Key Exchange', def: 'Allows two parties to establish a shared secret over an insecure channel without ever transmitting the secret itself. Foundation of TLS handshakes.' },
+          { term: 'Post-Quantum Cryptography', def: 'Algorithms designed to resist quantum computer attacks. Based on lattice problems (e.g. CRYSTALS-Kyber). NIST standardised these in 2024.' },
+        ],
+        concepts: [
+          'Symmetric uses 1 key; asymmetric uses a public/private pair',
+          'Hashing is one-way — it cannot be reversed',
+          'Salting prevents rainbow table attacks on password hashes',
+          'E2EE means even the service provider cannot read your messages',
+        ],
+        questions: [
+          { q: 'What is the key difference between symmetric and asymmetric encryption?', opts: ['Symmetric uses one key for both encrypt/decrypt; asymmetric uses a public/private key pair', 'Symmetric is newer and stronger than asymmetric', 'Asymmetric is only used for hashing', 'Symmetric requires a certificate authority'], ans: 0, exp: 'Symmetric uses a single shared key. Asymmetric uses a public key (shared freely) and a private key (kept secret), enabling secure communication without sharing a secret first.' },
+          { q: 'AES-256 — what does the "256" refer to?', opts: ['Number of encryption rounds', 'Key length in bits', 'Block size in bytes', 'Number of possible algorithms'], ans: 1, exp: '256 is the key length in bits. A 256-bit key has 2²⁵⁶ possible values, making brute-force computationally infeasible even with the most powerful hardware.' },
+          { q: 'Which function is one-way and cannot be reversed?', opts: ['RSA encryption', 'AES encryption', 'SHA-256 hashing', 'Diffie-Hellman exchange'], ans: 2, exp: 'Cryptographic hash functions like SHA-256 are one-way — you cannot derive the original input from the hash. This is why they\'re ideal for password storage.' },
+          { q: 'What does "salting" a password before hashing prevent?', opts: ['Brute force via fast hardware', 'Rainbow table attacks using pre-computed hash lists', 'SQL injection attacks', 'Man-in-the-middle attacks'], ans: 1, exp: 'Salting adds unique random data to each password before hashing. Even identical passwords produce different hashes, defeating pre-computed rainbow tables.' },
+          { q: 'End-to-end encryption (E2EE) means which party CANNOT read message content?', opts: ['The recipient', 'The sender', 'The service provider (e.g. WhatsApp)', 'A third-party auditor'], ans: 2, exp: 'In E2EE messages are encrypted on the sender\'s device and only decrypted on the recipient\'s device. The service provider never holds the decryption keys.' },
+          { q: 'Post-quantum algorithms like CRYSTALS-Kyber are based on which problem?', opts: ['Integer factorisation', 'Discrete logarithm', 'Lattice problems', 'Elliptic curve cryptography'], ans: 2, exp: 'Post-quantum algorithms rely on lattice problems (e.g. Learning With Errors) which are believed resistant to quantum computers, unlike factoring (RSA) or discrete log (ECC).' },
+          { q: 'Which is the gold standard for symmetric encryption today?', opts: ['DES', 'MD5', 'AES-256', 'Blowfish'], ans: 2, exp: 'AES-256 is used by governments, militaries, and is mandated for classified data. DES and 3DES are deprecated; MD5 is a hash function, not an encryption algorithm.' },
+          { q: 'What does Diffie-Hellman enable?', opts: ['Password hashing with salts', 'Establishing a shared secret over an insecure channel without transmitting it', 'Signing digital certificates', 'Encrypting large files symmetrically'], ans: 1, exp: 'Diffie-Hellman allows two parties to derive the same shared secret independently using public values, so the secret itself is never transmitted. It is the foundation of TLS key exchange.' },
+          { q: 'Which is a valid use of hashing rather than encryption?', opts: ['Protecting a message in transit so only the recipient reads it', 'Storing passwords so even the server cannot retrieve the plaintext', 'Sharing a public key to receive encrypted messages', 'Generating a session key for HTTPS'], ans: 1, exp: 'Hashing stores passwords — the server stores the hash, compares a new hash on login, and never needs the plaintext. Encryption is reversible; hashing is not.' },
+          { q: 'In which year did NIST finalise post-quantum cryptography standards?', opts: ['2018', '2021', '2024', '2030 (planned)'], ans: 2, exp: 'NIST finalised the first set of post-quantum cryptography standards in 2024, including CRYSTALS-Kyber (key encapsulation) and CRYSTALS-Dilithium (digital signatures).' },
+        ],
+      },
+      {
+        id: 'cyber2',
+        name: 'Attacks & Threats',
+        meta: 'Malware, phishing, DDoS, zero-days & MitM',
+        flashcards: [
+          { term: 'Malware', def: 'Malicious software designed to damage, disrupt or gain unauthorised access. Types: viruses, worms, trojans, ransomware, spyware, rootkits.' },
+          { term: 'Phishing / Spear Phishing', def: 'Tricking users into revealing credentials or installing malware via fake emails. Spear phishing targets named individuals using personal details. Vishing = phone. Smishing = SMS.' },
+          { term: 'DDoS (Distributed Denial of Service)', def: 'Flooding a target server with traffic from a botnet of compromised machines, exhausting resources and making the service unavailable to legitimate users.' },
+          { term: 'Man-in-the-Middle (MitM)', def: 'Attacker secretly intercepts and possibly alters communication between two parties. Methods: ARP poisoning, SSL stripping, evil twin WiFi.' },
+          { term: 'SQL Injection', def: 'Inserting malicious SQL into input fields to manipulate the database — bypassing login, dumping tables, or deleting data. Consistently in OWASP Top 10.' },
+          { term: 'Zero-Day Exploit', def: 'Targets a vulnerability unknown to the software vendor — zero days available to patch. Highly valuable. Example: NSA\'s EternalBlue, used in WannaCry ransomware.' },
+          { term: 'Ransomware', def: 'Malware that encrypts the victim\'s data and demands payment for the decryption key. Notable examples: WannaCry, REvil, LockBit.' },
+          { term: 'Social Engineering', def: 'Manipulating people (not systems) into revealing information or taking actions. Exploits trust, urgency, and authority rather than technical vulnerabilities.' },
+        ],
+        concepts: [
+          'Phishing targets human trust; malware exploits technical vulnerabilities',
+          'Zero-days have no vendor patch available yet',
+          'DDoS uses botnets to overwhelm availability — not secrecy or integrity',
+          'SQL injection exploits unsanitised user inputs passed to a database',
+        ],
+        questions: [
+          { q: 'What distinguishes spear phishing from general phishing?', opts: ['Spear phishing uses SMS; general phishing uses email', 'Spear phishing targets a named individual using personal details to appear credible', 'Spear phishing uses malware attachments; general phishing uses links only', 'Spear phishing is fully automated; general phishing is manual'], ans: 1, exp: 'Spear phishing is targeted — it uses the victim\'s name, role, or recent activity to seem legitimate. Generic phishing casts a wide net with identical messages to thousands of recipients.' },
+          { q: 'A DDoS attack makes a service unavailable by doing what?', opts: ['Encrypting the server\'s hard drive', 'Flooding it with traffic from many compromised machines (a botnet)', 'Injecting malicious SQL into the database', 'Intercepting packets between client and server'], ans: 1, exp: 'DDoS (Distributed Denial of Service) uses a botnet to flood the target with requests, exhausting its bandwidth or processing capacity, making it unreachable to legitimate users.' },
+          { q: 'EternalBlue was used in which major cyberattack?', opts: ['NotPetya', 'Stuxnet', 'WannaCry ransomware', 'SolarWinds supply chain attack'], ans: 2, exp: 'EternalBlue, an NSA-developed exploit for a Windows SMB vulnerability, was leaked in 2017 and weaponised in the WannaCry ransomware attack that hit 150+ countries.' },
+          { q: 'How does SQL injection work?', opts: ['Sending oversized packets to crash the database server', 'Inserting malicious SQL into unvalidated input fields to manipulate the database', 'Installing a keylogger on the user\'s machine', 'Forging cookies to hijack active sessions'], ans: 1, exp: 'SQL injection inserts malicious SQL commands into form fields. If the application passes input directly to the database without sanitisation, an attacker can bypass authentication, extract data, or destroy tables.' },
+          { q: 'What is a zero-day exploit?', opts: ['An attack launched within 24 hours of a patch release', 'An exploit for an unknown vulnerability with zero days available to patch it', 'A denial-of-service attack lasting less than one day', 'An attack that leaves zero traces in log files'], ans: 1, exp: 'Zero-day means the vendor doesn\'t yet know about the vulnerability — there are zero days to fix it. These exploits are extremely valuable and often stockpiled by intelligence agencies.' },
+          { q: 'Which attack type involves secretly intercepting communications between two parties?', opts: ['DDoS', 'Ransomware', 'Man-in-the-Middle (MitM)', 'SQL Injection'], ans: 2, exp: 'A MitM attack positions the attacker between communicating parties. Methods include ARP poisoning on local networks, SSL stripping to force HTTP, and evil twin WiFi access points.' },
+          { q: 'What does ransomware do to victim data?', opts: ['Exfiltrates it silently to a remote server', 'Encrypts it and demands payment for the decryption key', 'Deletes it permanently without possibility of recovery', 'Overwrites it with random data'], ans: 1, exp: 'Ransomware encrypts files, making them inaccessible. A ransom demand is made — typically in cryptocurrency — for the decryption key. Payment does not guarantee recovery.' },
+          { q: 'Vishing is a social engineering attack using which channel?', opts: ['Email', 'SMS text messages', 'Voice phone calls', 'Social media direct messages'], ans: 2, exp: 'Vishing (voice phishing) uses phone calls to deceive victims, often impersonating banks, tech support, or government agencies. Smishing uses SMS. Both exploit human trust the same way email phishing does.' },
+          { q: 'Which attack type appears consistently in the OWASP Top 10 web application risks?', opts: ['DDoS', 'Man-in-the-Middle', 'SQL Injection and Cross-Site Scripting (XSS)', 'Zero-day browser exploits'], ans: 2, exp: 'OWASP Top 10 tracks the most critical and common web application risks. SQL Injection and XSS have appeared consistently because they remain widespread and easily exploitable in poorly coded applications.' },
+          { q: 'What is a botnet?', opts: ['A secure network of honeypot servers used to trap attackers', 'A network of compromised devices controlled remotely to launch attacks', 'A type of intrusion detection system', 'An encrypted peer-to-peer communication protocol'], ans: 1, exp: 'A botnet is a network of internet-connected devices infected with malware and controlled remotely by an attacker. Botnets power DDoS attacks, spam campaigns, credential stuffing, and crypto mining.' },
+        ],
+      },
+      {
+        id: 'cyber3',
+        name: 'Network Forensics & Defence',
+        meta: 'Forensics, IDS/IPS, SIEM, Zero Trust & defence',
+        flashcards: [
+          { term: 'Network Forensics', def: 'Monitoring, capturing, and analysing network traffic to detect intrusions, investigate incidents, and gather legal evidence. Answers: what happened, when, who?' },
+          { term: 'Wireshark', def: 'Open-source packet analyser used to capture and inspect raw network packets. Essential tool for network forensics and protocol analysis.' },
+          { term: 'IDS / IPS', def: 'Intrusion Detection System (alerts on threats) vs Intrusion Prevention System (also actively blocks threats). Can be signature-based or anomaly-based.' },
+          { term: 'SIEM', def: 'Security Information and Event Management. Aggregates and correlates logs from across an organisation to detect attack patterns. Examples: Splunk, Microsoft Sentinel.' },
+          { term: 'MITRE ATT&CK', def: 'A globally accessible knowledge base of adversary tactics, techniques, and procedures (TTPs) based on real-world observations. Used for detection and attribution.' },
+          { term: 'Zero Trust Architecture', def: '"Never trust, always verify." No device or user is implicitly trusted even inside the network. Identity is the perimeter. Every request is authenticated.' },
+          { term: 'Penetration Testing', def: 'Authorised simulated attacks to find vulnerabilities before real attackers do. Red team (attack) vs blue team (defence). Tools: Metasploit, Burp Suite, Kali Linux.' },
+          { term: 'Defence in Depth', def: 'Multiple overlapping security layers so that failure of one does not compromise everything. Firewalls + IDS + MFA + Encryption + EDR working together.' },
+        ],
+        concepts: [
+          'Forensics: what happened, when, and who was responsible?',
+          'SIEM correlates logs across the whole org to find attack patterns',
+          'Zero Trust: identity is the new perimeter — never trust implicitly',
+          'Defence in depth = no single point of failure',
+        ],
+        questions: [
+          { q: 'What is network forensics primarily used for?', opts: ['Designing network topology and firewall rules', 'Monitoring, capturing and analysing traffic to detect intrusions and gather evidence', 'Encrypting data in transit between data centres', 'Load balancing traffic across server clusters'], ans: 1, exp: 'Network forensics captures and analyses traffic to answer: what happened, when, and who was responsible? It provides evidence for incident response and legal proceedings.' },
+          { q: 'Wireshark is primarily used for what?', opts: ['Scanning for open ports on a network', 'Capturing and analysing raw network packets', 'Managing firewall rules and ACLs', 'Monitoring server CPU and memory usage'], ans: 1, exp: 'Wireshark captures packets at the network interface and lets analysts inspect headers and payloads, follow TCP sessions, filter by protocol, and identify anomalies in real time.' },
+          { q: 'What is the difference between an IDS and an IPS?', opts: ['IDS monitors inbound only; IPS monitors outbound only', 'IDS alerts on suspicious activity; IPS also actively blocks threats', 'IDS is signature-based; IPS is always anomaly-based', 'IDS is hardware-based; IPS is software-based'], ans: 1, exp: 'An IDS (Intrusion Detection System) monitors traffic and raises alerts. An IPS (Intrusion Prevention System) goes further — it can automatically block or drop suspicious traffic in real time.' },
+          { q: 'What does a SIEM system do?', opts: ['Scans web applications for injection vulnerabilities', 'Collects and correlates logs from across an organisation to detect suspicious patterns', 'Manages cryptographic keys for TLS certificates', 'Provides VPN tunnelling for remote workers'], ans: 1, exp: 'SIEM tools (Splunk, Microsoft Sentinel) aggregate logs from firewalls, servers, and endpoints, applying correlation rules and machine learning to surface attack patterns invisible in individual log files.' },
+          { q: 'MITRE ATT&CK catalogues what?', opts: ['Known software vulnerabilities with CVE numbers', 'Adversary tactics, techniques, and procedures (TTPs) based on real-world observations', 'Encryption algorithm benchmarks', 'Data protection regulations by country'], ans: 1, exp: 'MITRE ATT&CK documents how real adversaries operate — their techniques from initial access to exfiltration. Used to improve detection, threat hunt, and attribute attacks to known threat actors.' },
+          { q: 'Zero Trust Architecture is built on which core principle?', opts: ['All internal network traffic is trusted by default', 'Once authenticated, a user is trusted for the full session', 'Never trust, always verify — no device or user is implicitly trusted', 'A strong perimeter firewall provides sufficient protection'], ans: 2, exp: 'Zero Trust eliminates the concept of a trusted internal network. Every request is authenticated and authorised regardless of source. Compromising one machine doesn\'t grant access to everything.' },
+          { q: 'What does penetration testing involve?', opts: ['Automatically patching known vulnerabilities on all systems', 'Authorised simulated attacks to find vulnerabilities before real attackers do', 'Monitoring network traffic for anomalies in real time', 'Deploying honeypots to attract and study attackers'], ans: 1, exp: 'Penetration testers (ethical hackers) use the same tools as real attackers — with explicit permission — to find and report vulnerabilities before they can be exploited maliciously.' },
+          { q: 'What does "defence in depth" mean?', opts: ['Encrypting all data at maximum bit strength', 'Multiple overlapping security layers so a single failure doesn\'t compromise everything', 'Using only defensive tools, never offensive techniques', 'Keeping all sensitive data air-gapped from the internet'], ans: 1, exp: 'Defence in depth layers controls — firewall, IDS, MFA, EDR, encryption — so if one layer fails, others remain. There is no single point of failure.' },
+          { q: 'Why is chain of custody important in network forensics?', opts: ['It speeds up the investigation process', 'It ensures evidence is legally admissible by documenting who handled it and when', 'It prevents investigators from accessing encrypted data', 'It establishes the correct network topology for the investigation'], ans: 1, exp: 'Chain of custody documents every person who handled evidence and every action taken. Without it, evidence can be challenged in court as potentially tampered with or contaminated.' },
+          { q: 'Which framework best supports attributing an attack to a known threat actor group?', opts: ['OWASP Top 10', 'ISO 27001', 'MITRE ATT&CK', 'NIST CSF'], ans: 2, exp: 'MITRE ATT&CK maps observed techniques to known threat actor profiles (APT groups), enabling analysts to assess attribution based on TTPs — while acknowledging that false flags make attribution inherently difficult.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'env',
+    name: 'Environmental Issues',
+    icon: '🌿',
+    color: '#39ff6a',
+    bg: 'rgba(57,255,106,0.08)',
+    bd: 'rgba(57,255,106,0.25)',
+    lessons: [
+      {
+        id: 'env1',
+        name: 'Energy & Carbon Footprint',
+        meta: 'PUE, data centre energy, carbon & renewables',
+        flashcards: [
+          { term: 'PUE (Power Usage Effectiveness)', def: 'Total facility power ÷ IT equipment power. A PUE of 1.0 is perfect efficiency. Industry average ~1.5; hyperscalers (Google, AWS) achieve ~1.1.' },
+          { term: 'Data Centre Energy Consumption', def: 'Data centres consume 2–4% of global electricity, running 24/7. Cooling alone accounts for ~40% of total energy. Growing rapidly with AI and cloud adoption.' },
+          { term: 'Embodied Carbon', def: 'GHG emissions from manufacturing, transporting, and disposing of a device — not from its use phase. Often exceeds operational emissions over the device\'s full lifetime.' },
+          { term: 'Green Computing', def: 'Designing hardware and software for energy efficiency: dynamic voltage scaling, sleep states, efficient algorithms, and carbon-aware workload scheduling.' },
+          { term: 'Carbon-Aware Computing', def: 'Shifting compute workloads to times and locations where the electrical grid uses cleaner energy — e.g. scheduling AI training during high wind or solar output periods.' },
+          { term: 'Jevons Paradox', def: 'As computing becomes more energy-efficient, total consumption often rises because the technology becomes cheaper and is deployed at greater scale, offsetting efficiency gains.' },
+          { term: 'PPA (Power Purchase Agreement)', def: 'A long-term contract to buy renewable energy directly from a generator. Used by hyperscalers to credibly claim 100% renewable electricity and finance new capacity.' },
+        ],
+        concepts: [
+          'PUE closer to 1.0 = more efficient; 1.0 is the theoretical perfect score',
+          'Embodied carbon (manufacturing) often exceeds operational carbon',
+          'Jevons Paradox: efficiency gains can increase total consumption',
+          'PPAs allow companies to fund and claim new renewable energy capacity',
+        ],
+        questions: [
+          { q: 'What does a PUE of 1.0 represent?', opts: ['Maximum energy waste — all power lost to cooling', 'Perfect efficiency — every watt goes to IT equipment with no waste', 'Equal split between IT and cooling power', '100% renewable energy use'], ans: 1, exp: 'PUE = total facility power ÷ IT equipment power. 1.0 means all power is used by computing, with zero wasted on cooling or UPS losses. Hyperscalers achieve ~1.1 in practice.' },
+          { q: 'Approximately what share of global electricity do data centres consume?', opts: ['Under 0.5%', '2–4%', '10–15%', 'Over 25%'], ans: 1, exp: 'Data centres consume approximately 2–4% of global electricity and the figure is rising rapidly as AI training, streaming, and cloud adoption continue to grow.' },
+          { q: 'What is "embodied carbon"?', opts: ['CO₂ emitted while a device is charging', 'Emissions from manufacturing, transport, and disposal — not from use', 'The carbon footprint of software running on a device', 'CO₂ absorbed by server cooling water'], ans: 1, exp: 'Embodied carbon covers the pre-use lifecycle: raw material extraction, manufacturing, and shipping. For many devices, it exceeds operational carbon over the product\'s lifetime.' },
+          { q: 'The Jevons Paradox applied to computing means:', opts: ['More efficient algorithms always reduce total energy use', 'Efficiency gains are often offset by increased adoption, increasing total consumption', 'Renewable energy always costs more than fossil fuels in data centres', 'Better hardware always produces more e-waste'], ans: 1, exp: 'The Jevons Paradox: improving efficiency makes technology cheaper and more widely deployed, which can increase total energy consumption even as per-unit efficiency improves.' },
+          { q: 'Carbon-aware computing involves:', opts: ['Using carbon offsets to compensate for emissions', 'Shifting workloads to times and places where the grid uses cleaner energy', 'Installing solar panels on data centre rooftops', 'Measuring and reporting Scope 3 emissions annually'], ans: 1, exp: 'Carbon-aware software schedules batch workloads (AI training, video transcoding) for periods when renewable supply is high — e.g. midday solar peaks — or routes them to data centres in greener grid regions.' },
+          { q: 'What does a PPA (Power Purchase Agreement) enable?', opts: ['A long-term contract to buy renewable energy directly from a generator', 'A penalty clause for missing uptime SLAs', 'A legal agreement governing cross-border data transfers', 'A procurement framework for low-energy server hardware'], ans: 1, exp: 'A PPA locks in long-term renewable energy purchases from a specific generator. This finances new renewable capacity and allows companies to credibly claim renewable electricity use.' },
+          { q: 'Approximately what fraction of data centre energy goes to cooling?', opts: ['5–10%', '~40%', '65%', 'Over 80%'], ans: 1, exp: 'Cooling typically accounts for around 40% of a data centre\'s total energy use, making it the single biggest efficiency target. Strategies include hot/cold aisle containment, free cooling, and direct liquid cooling.' },
+          { q: 'Training a single large AI model has been compared in carbon emissions to:', opts: ['Running a laptop for one year', 'Approximately five transatlantic flights per passenger', 'The annual output of a coal power plant', 'Heating a European home for a decade'], ans: 1, exp: 'Research estimated that training a large NLP model can emit ~284 tonnes CO₂e — roughly five transatlantic round-trips. Very large models like GPT-4 likely exceed this significantly.' },
+          { q: 'WUE measures what in data centres?', opts: ['Watts Used Effectively — ratio of active vs idle server power', 'Water Usage Effectiveness — litres of water used per kWh of IT load', 'Wireless Uptime Efficiency — network availability percentage', 'Workload Utilisation Estimate — average CPU load'], ans: 1, exp: 'WUE (Water Usage Effectiveness) = annual water used ÷ IT energy consumed. Large data centres in hot climates consume millions of litres daily for evaporative cooling — a growing concern in water-stressed regions.' },
+          { q: 'Which strategy does NOT directly reduce a data centre\'s operational carbon?', opts: ['Renewable energy via PPAs', 'Improving PUE through better cooling design', 'Right to Repair policies for consumer devices', 'Carbon-aware scheduling of batch workloads'], ans: 2, exp: 'Right to Repair addresses device longevity and e-waste — the embodied carbon problem. It doesn\'t reduce a data centre\'s operational emissions, unlike PPAs, PUE improvements, or carbon-aware scheduling.' },
+        ],
+      },
+      {
+        id: 'env2',
+        name: 'E-Waste & Resource Use',
+        meta: 'E-waste, right to repair, rare earths & crypto energy',
+        flashcards: [
+          { term: 'E-Waste', def: 'Discarded electronic devices — the fastest-growing waste stream globally. ~62 million tonnes per year. Only ~17% formally recycled. Contains hazardous materials.' },
+          { term: 'Hazardous Materials in Electronics', def: 'Old electronics contain lead, mercury, cadmium, and brominated flame retardants that leach into soil and groundwater in informal recycling operations.' },
+          { term: 'Right to Repair', def: 'Movement advocating for repairable, upgradeable devices with available spare parts — to extend lifespans, reduce e-waste, and challenge planned obsolescence.' },
+          { term: 'Planned Obsolescence', def: 'Deliberately designing products with limited useful lifespans to drive repeat purchases. Examples: non-replaceable batteries, software slowdowns, discontinued security updates.' },
+          { term: 'Rare Earth Elements', def: 'Neodymium, cobalt, lithium, tantalum — essential for modern electronics. Mining is environmentally destructive and often linked to exploitative labour conditions.' },
+          { term: 'Circular Economy', def: 'Economic model that eliminates waste by reusing, repairing, refurbishing, and recycling materials indefinitely — contrasted with the linear "take-make-dispose" model.' },
+          { term: 'Proof-of-Work vs Proof-of-Stake', def: 'PoW (Bitcoin) requires massive computation — consumes more electricity than many countries. PoS (Ethereum post-2022 Merge) reduced energy use by ~99.95%.' },
+        ],
+        concepts: [
+          'Only ~17% of e-waste is formally and safely recycled',
+          'Cobalt (DRC) is linked to child labour in electronics supply chains',
+          'Planned obsolescence drives unnecessary waste and resource extraction',
+          'Ethereum\'s switch to Proof-of-Stake cut energy use by ~99.95%',
+        ],
+        questions: [
+          { q: 'Approximately what percentage of global e-waste is formally recycled?', opts: ['5%', '17%', '50%', '75%'], ans: 1, exp: 'Only approximately 17% of e-waste is formally and safely recycled (ITU 2023). The rest goes to landfill or informal operations — often in low-income countries — where toxic materials cause serious harm.' },
+          { q: 'Which hazardous material found in electronics is associated with child labour in the DRC?', opts: ['Lithium', 'Silicon', 'Cobalt', 'Neodymium'], ans: 2, exp: 'Cobalt is critical for lithium-ion batteries. The DRC produces ~70% of global cobalt, and investigations extensively document child labour and dangerous conditions in artisanal mining operations.' },
+          { q: 'The Right to Repair movement primarily aims to:', opts: ['Reduce energy consumption in data centres', 'Allow consumers to repair and upgrade their own devices, extending lifespans and reducing e-waste', 'Give software developers the right to fix bugs in proprietary systems', 'Require manufacturers to offer lifetime warranties on electronics'], ans: 1, exp: 'Right to Repair advocates argue products should be designed with available spare parts, repair manuals, and no intentional barriers to self-repair — challenging planned obsolescence.' },
+          { q: 'What is "planned obsolescence"?', opts: ['A security patch schedule where old software is unsupported after a fixed period', 'Deliberately limiting a product\'s useful life to drive repeat purchases', 'An environmental law requiring old devices to be recycled after 5 years', 'The natural end-of-life of hardware components through normal wear'], ans: 1, exp: 'Planned obsolescence is intentional: non-replaceable batteries, software slowdowns, discontinued patches. It shortens product lifetimes, increases e-waste, and drives unnecessary resource extraction.' },
+          { q: 'A circular economy approach to electronics means:', opts: ['Producing devices as cheaply as possible for maximum accessibility', 'Reusing, repairing, and recycling materials to eliminate waste — no "take-make-dispose"', 'Centralising manufacturing in countries with the lowest carbon grids', 'Taxing consumers on device purchases to fund e-waste recycling'], ans: 1, exp: 'A circular economy keeps materials in use as long as possible through repair, refurbishment, remanufacturing, and recycling — contrasted with the linear model where products are discarded at end-of-life.' },
+          { q: 'Ethereum\'s "Merge" in 2022 reduced its energy consumption by approximately:', opts: ['10%', '50%', '99.95%', 'It actually increased energy use for greater security'], ans: 2, exp: 'The Merge switched Ethereum from Proof-of-Work (energy-intensive mining) to Proof-of-Stake (validators stake coins rather than compute). This cut energy consumption by approximately 99.95%.' },
+          { q: 'Bitcoin\'s Proof-of-Work mechanism consumes energy comparable to:', opts: ['A small city of ~50,000 people', 'Several medium-sized countries', 'A single large data centre', 'About the same as Netflix streaming globally'], ans: 1, exp: 'The Cambridge Bitcoin Electricity Consumption Index estimates Bitcoin consumes more electricity than countries like Argentina or Norway, making it one of the most energy-intensive computing systems ever built.' },
+          { q: 'Which is NOT a hazardous material commonly found in electronics?', opts: ['Lead (in solder)', 'Mercury (in older backlights)', 'Cadmium (in batteries)', 'Nitrogen (in circuit board gaps)'], ans: 3, exp: 'Lead, mercury, and cadmium are genuine hazardous materials in electronics that cause serious environmental and health harm when improperly disposed of. Nitrogen is inert and poses no toxicity concern.' },
+          { q: 'The WEEE Directive is an EU regulation governing:', opts: ['Web and Electronic Enterprise rules for internet platforms', 'Waste Electrical and Electronic Equipment — e-waste collection and recycling obligations', 'Water and Energy Efficiency in data centres', 'Wireless Electromagnetic Equipment Emissions standards'], ans: 1, exp: 'The WEEE Directive requires manufacturers to take responsibility for end-of-life collection and recycling of their products. It established national e-waste collection and recycling targets across the EU.' },
+          { q: 'Rare earth element mining is a concern primarily because:', opts: ['The elements are radioactive and dangerous to handle in consumer devices', 'Mining is environmentally destructive and often linked to labour exploitation', 'Rare earths significantly increase the weight of mobile devices', 'They cannot be recycled and are permanently lost after one use'], ans: 1, exp: 'Rare earth mining destroys ecosystems and major deposits are in regions with weak environmental and labour protections. Cobalt (DRC) and lithium (South America\'s Lithium Triangle) raise serious sustainability and human rights concerns.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'ethics',
+    name: 'Ethical Issues',
+    icon: '⚖️',
+    color: '#ff6b35',
+    bg: 'rgba(255,107,53,0.08)',
+    bd: 'rgba(255,107,53,0.25)',
+    lessons: [
+      {
+        id: 'eth1',
+        name: 'Privacy & Surveillance',
+        meta: 'Surveillance capitalism, mass surveillance & deepfakes',
+        flashcards: [
+          { term: 'Surveillance Capitalism', def: 'Shoshana Zuboff\'s term for the economic model where companies harvest behavioural data to predict and modify human behaviour — sold as a product to advertisers and others.' },
+          { term: 'Contextual Integrity', def: 'Helen Nissenbaum\'s theory: privacy is violated when data flows outside the norms of the context in which it was collected (e.g. medical data used for advertising).' },
+          { term: 'Mass Surveillance (PRISM / Snowden)', def: 'NSA/GCHQ programmes revealed in 2013 that collected bulk metadata and content from global internet communications without individualised warrants.' },
+          { term: 'Digital Divide', def: 'Inequality in access to digital technologies structured by geography, income, age, disability, and gender. ~2.6 billion people remain offline globally (ITU 2023).' },
+          { term: 'Deepfakes', def: 'AI-generated synthetic media convincingly depicting real people doing or saying things they never did. A growing threat to democratic discourse and personal reputation.' },
+          { term: 'Liar\'s Dividend', def: 'The ability to dismiss genuine evidence as "probably a deepfake," eroding trust in authentic footage. May be as damaging as the fake media itself.' },
+          { term: 'C2PA (Content Provenance)', def: 'An open standard attaching cryptographically signed metadata to media files to prove their origin and detect manipulation — combating deepfakes.' },
+        ],
+        concepts: [
+          'Surveillance capitalism: monetising human behavioural prediction',
+          'Contextual integrity: context of original collection matters for privacy',
+          'Snowden (2013): bulk collection of communications without warrants',
+          'Liar\'s dividend: real evidence can be dismissed as AI-generated',
+        ],
+        questions: [
+          { q: 'Who coined the term "surveillance capitalism" and what does it describe?', opts: ['Tim Berners-Lee — the original design of the web', 'Shoshana Zuboff — an economic model monetising human behavioural prediction', 'Edward Snowden — government surveillance of citizens', 'Evgeny Morozov — internet censorship by authoritarian governments'], ans: 1, exp: 'Shoshana Zuboff\'s 2019 book describes surveillance capitalism as an economic logic where behavioural data is harvested to predict and modify behaviour. The product being sold is human futures, not software.' },
+          { q: 'Contextual integrity argues that privacy violations occur when:', opts: ['Data is stored insecurely or without encryption', 'Information flows outside the norms of the context in which it was originally collected', 'Personal data is accessed by more than three parties', 'Data is retained for longer than 12 months'], ans: 1, exp: 'Nissenbaum\'s framework: privacy isn\'t about secrecy alone — it\'s about appropriate information flow. Medical data shared with a doctor is appropriate; the same data flowing to an insurer or advertiser violates contextual norms.' },
+          { q: 'Edward Snowden\'s 2013 revelations primarily exposed:', opts: ['Facebook\'s internal research on harm to teenagers', 'CIA deepfake use in foreign operations', 'NSA/GCHQ bulk collection of metadata and communications from global internet traffic without warrants', 'A GCHQ programme targeting only known terrorist suspects'], ans: 2, exp: 'Snowden revealed PRISM and related programmes that collected bulk metadata and content from emails, calls, and internet traffic — including of US citizens and foreign heads of state — without individualised warrants.' },
+          { q: 'The "liar\'s dividend" is the risk that:', opts: ['Deepfake creators profit financially from disinformation', 'Real evidence can be dismissed as "probably a deepfake," eroding trust in genuine footage', 'AI systems trained on fake data make worse predictions', 'Courts cannot admit digital evidence due to manipulation concerns'], ans: 1, exp: 'Even if deepfakes are identified, their existence gives bad actors a tool: claiming any real, damaging evidence is AI-generated. The liar\'s dividend may be as harmful as the fakes themselves.' },
+          { q: 'What is C2PA designed to do?', opts: ['Certify data centres as carbon neutral', 'Attach cryptographic provenance metadata to media files to verify their origin and detect manipulation', 'Create a standard API for content moderation across platforms', 'Regulate the use of facial recognition in public spaces'], ans: 1, exp: 'C2PA (Coalition for Content Provenance and Authenticity) embeds cryptographically signed metadata in photos, videos, and audio — recording who created them, on what device, and any subsequent edits.' },
+          { q: 'The digital divide is structured by which factors?', opts: ['Geography only — rural vs urban access', 'Device preference — iOS vs Android users', 'Geography, income, age, disability, and gender', 'Government policy choices on spectrum allocation alone'], ans: 2, exp: 'The digital divide is multidimensional: rural communities lack infrastructure; low-income households can\'t afford devices; older adults face digital literacy barriers; people with disabilities encounter accessibility gaps.' },
+          { q: 'Approximately how many people globally remain offline?', opts: ['500 million', '1 billion', '2.6 billion', '4 billion'], ans: 2, exp: 'The ITU estimates approximately 2.6 billion people remain unconnected (2023). As essential services move online — healthcare, government, education — digital exclusion has increasingly severe consequences.' },
+          { q: 'In surveillance capitalism the core "product" being sold is:', opts: ['Software and digital services sold directly to consumers', 'Predicted human behaviour — sold to those seeking to influence decisions', 'Hardware manufactured at global scale using cheap labour', 'Intellectual property licenced to other businesses'], ans: 1, exp: 'In surveillance capitalism users are not just customers — they are the raw material. Their behaviour is observed, modelled, and used to create prediction products sold to advertisers, political campaigns, and others.' },
+          { q: 'Mass surveillance programmes like PRISM raised concern under which legal frameworks?', opts: ['GDPR — storing EU citizens\' data without consent', 'Fourth Amendment / Article 8 ECHR — right to privacy and protection from unreasonable search', 'CFAA — unauthorised access to computer systems', 'DMCA — intellectual property in digital communications'], ans: 1, exp: 'PRISM violated Fourth Amendment protections (US) and Article 8 of the European Convention on Human Rights (right to private life). Courts in multiple jurisdictions later ruled aspects of these programmes unlawful.' },
+          { q: 'Which statement best describes the tension around government backdoor demands in E2EE?', opts: ['Backdoors are technically simple to implement securely for authorised use only', 'Any backdoor accessible to good actors will eventually be found and exploited by bad actors too', 'E2EE is only used by criminals — legitimate users have no need for it', 'Backdoors are required by GDPR for lawful interception purposes'], ans: 1, exp: 'Security experts universally argue there is no such thing as a backdoor only good actors can use. A technical vulnerability accessible to law enforcement is also accessible to hackers and foreign intelligence services.' },
+        ],
+      },
+      {
+        id: 'eth2',
+        name: 'AI Ethics & Algorithmic Fairness',
+        meta: 'Bias, fairness impossibility, COMPAS & accountability',
+        flashcards: [
+          { term: 'Algorithmic Bias', def: 'AI systems trained on historical data can perpetuate and amplify existing discrimination. Example: facial recognition with higher error rates for darker-skinned women (MIT Gender Shades study).' },
+          { term: 'Fairness Impossibility Theorem', def: 'Multiple mathematical definitions of fairness (equal accuracy, equal FPR, calibration) are provably mutually exclusive when base rates differ across groups. No single "fair" algorithm exists.' },
+          { term: 'COMPAS', def: 'Recidivism prediction algorithm used in US courts. Found to label Black defendants as high-risk at approximately twice the rate of white defendants with similar reoffending rates (ProPublica 2016).' },
+          { term: 'Explainability (XAI)', def: 'The ability to explain why an AI system made a specific decision. Required for accountability in high-stakes applications: hiring, credit, criminal justice, medical diagnosis.' },
+          { term: 'Automation Bias', def: 'The tendency to over-rely on automated systems, accepting their outputs without sufficient critical evaluation — even when the system is demonstrably wrong.' },
+          { term: 'Lethal Autonomous Weapons (LAWS)', def: 'AI systems that can select and engage targets without human involvement. Raise deep accountability questions: who is responsible for unlawful killings under International Humanitarian Law?' },
+          { term: 'Whistleblowing', def: 'Reporting an organisation\'s wrongdoing publicly or to regulators when internal channels fail. Example: Frances Haugen disclosing Facebook\'s internal research on platform harms in 2021.' },
+        ],
+        concepts: [
+          'Bias in training data = discriminatory outputs at scale',
+          'No single definition of "fair" — the impossibility theorem proves this mathematically',
+          'COMPAS showed racial disparities in criminal risk scoring',
+          'Automation bias: humans defer to algorithms even when they are wrong',
+        ],
+        questions: [
+          { q: 'What did the MIT "Gender Shades" study find about facial recognition systems?', opts: ['All systems performed equally across demographic groups', 'Error rates were up to 34% higher for darker-skinned women than lighter-skinned men', 'Systems were more accurate for women than men across all ethnicities', 'Error rates were highest for elderly white men'], ans: 1, exp: 'The 2018 Gender Shades study (Buolamwini & Gebru) found that commercial facial recognition had significantly higher error rates for darker-skinned women, demonstrating that non-representative training data perpetuates bias.' },
+          { q: 'The "impossibility theorem" in algorithmic fairness states that:', opts: ['It is impossible to build any AI system free from all bias', 'Multiple intuitive definitions of fairness are mathematically mutually exclusive', 'Machine learning models above a certain complexity cannot be explained', 'Perfect prediction accuracy is always theoretically achievable'], ans: 1, exp: 'Researchers proved (Chouldechova 2017, Kleinberg et al. 2016) that when base rates differ across groups, you cannot simultaneously satisfy equal accuracy, equal false positive rates, and calibration. There is no universally "fair" algorithm.' },
+          { q: 'COMPAS was controversial primarily because:', opts: ['It was hacked and exposed defendants\' personal data', 'It showed racial disparities — labelling Black defendants high-risk at ~twice the rate of white defendants', 'It predicted reoffending with near-perfect accuracy, raising surveillance concerns', 'It was used without any judicial oversight whatsoever'], ans: 1, exp: 'A ProPublica 2016 investigation found COMPAS incorrectly flagged Black defendants as future criminals at nearly twice the rate of white defendants, while having similar actual false-positive errors in the other direction for white defendants.' },
+          { q: 'What is "automation bias"?', opts: ['AI systems that automatically correct for demographic disparities', 'The tendency to over-rely on automated systems, accepting their outputs without critical evaluation', 'Bias introduced into models by automated data collection pipelines', 'Preference AI systems develop for majority-group training data over time'], ans: 1, exp: 'Automation bias is a well-documented cognitive tendency to defer to automated systems. In medical diagnosis, aviation, and criminal justice, it causes serious harm when humans stop questioning algorithmic outputs.' },
+          { q: 'Explainability (XAI) is particularly important in which contexts?', opts: ['Gaming and entertainment applications', 'Low-stakes recommendation systems like music streaming', 'High-stakes decisions: hiring, credit scoring, criminal sentencing, medical diagnosis', 'Only in military and national security applications'], ans: 2, exp: 'When an AI decision significantly affects a person\'s life — job rejected, loan denied, prison sentence extended — they have a right to understand why. "Black box" systems that cannot explain themselves are legally and ethically problematic.' },
+          { q: 'Lethal Autonomous Weapon Systems (LAWS) raise which primary ethical concern?', opts: ['They are too expensive for most military budgets', 'They reduce soldier casualties, which is ethically undesirable', 'There is no clear legal or moral accountability for unlawful killings they commit', 'They are easily hacked and turned against their operators'], ans: 2, exp: 'IHL (International Humanitarian Law) requires human responsibility for targeting decisions. Autonomous weapons raise the unanswered question: if a LAWS kills civilians unlawfully, who bears legal and moral responsibility?' },
+          { q: 'Frances Haugen\'s 2021 whistleblowing revealed that Facebook had:', opts: ['Deliberately allowed election interference by foreign state actors', 'Internal research showing platform harms to teenagers and democracy that was suppressed', 'Been sharing user data with the NSA without court orders', 'Used deepfake technology in targeted advertising campaigns'], ans: 1, exp: 'Frances Haugen leaked documents showing Facebook had research demonstrating Instagram\'s harm to teenage girls\' mental health and Facebook\'s role in amplifying divisive content — but did not act on these findings.' },
+          { q: 'Which ethical framework most supports the view that surveillance is wrong even if it prevents crime?', opts: ['Consequentialism — judging solely by aggregate outcomes', 'Deontology — people must never be treated merely as means to an end', 'Virtue ethics — focus on building moral organisations', 'Utilitarianism — greatest good for the greatest number'], ans: 1, exp: 'Kantian deontology holds that surveilling innocent people without cause treats them as instruments of state interest — violating their dignity as rational beings. This wrong persists regardless of beneficial outcomes.' },
+          { q: 'The ACM Code of Ethics places what at the top of professional obligations?', opts: ['Shareholder value and business competitiveness', 'The public interest — avoiding harm, honesty, privacy, and professional competence', 'Innovation speed over safety when under commercial pressure', 'Only the interests of the employer who contracted the professional'], ans: 1, exp: 'The ACM Code of Ethics (revised 2018) places the public good first. Professionals must avoid harm, be honest, respect privacy, maintain competence, and support fair access to computing resources.' },
+          { q: '"Algorithmic accountability" means:', opts: ['Ensuring algorithms are fast and cost-efficient', 'Clear mechanisms to identify responsibility for algorithmic harm, explain decisions, and allow challenge and correction', 'Requiring all algorithms to be open-sourced publicly', 'Limiting algorithms to only decisions previously made by humans'], ans: 1, exp: 'Algorithmic accountability combines explainability (why?), human oversight (who reviews?), and legal responsibility (who is liable?). It is the framework needed to make automated decision-making compatible with rights.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'legal',
+    name: 'Legal Issues',
+    icon: '📜',
+    color: '#c77dff',
+    bg: 'rgba(199,125,255,0.08)',
+    bd: 'rgba(199,125,255,0.25)',
+    lessons: [
+      {
+        id: 'leg1',
+        name: 'Data Protection Law',
+        meta: 'GDPR, DPA 2018, data subject rights & enforcement',
+        flashcards: [
+          { term: 'GDPR (2018)', def: 'EU General Data Protection Regulation. Applies to any organisation processing EU residents\' data. Max fines: €20M or 4% of global annual turnover — whichever is higher.' },
+          { term: 'Six Lawful Bases (GDPR)', def: 'Consent, Contract, Legal obligation, Vital interests, Public task, Legitimate interests. An organisation must identify one before processing personal data.' },
+          { term: 'Data Subject Rights', def: 'Under GDPR: access, rectification, erasure ("right to be forgotten"), restriction, portability, objection, and rights around automated decision-making.' },
+          { term: 'Right to Erasure', def: 'GDPR Article 17 — right to request deletion of personal data. Not absolute: can be refused for legal obligations, public interest, or freedom of expression.' },
+          { term: '72-Hour Breach Notification', def: 'GDPR Article 33 requires notifying the supervisory authority (e.g. ICO in the UK) within 72 hours of detecting a personal data breach.' },
+          { term: 'DPO (Data Protection Officer)', def: 'Required under GDPR for public authorities and organisations doing large-scale monitoring or processing of sensitive data. Must have expert knowledge of data protection law.' },
+          { term: 'UK GDPR / DPA 2018', def: 'Post-Brexit UK equivalent of EU GDPR. Administered and enforced by the ICO (Information Commissioner\'s Office). Broadly mirrors EU GDPR with some UK-specific variations.' },
+        ],
+        concepts: [
+          '6 lawful bases — one must be identified before any processing begins',
+          '72-hour breach notification to the supervisory authority (e.g. ICO)',
+          'Right to erasure is not absolute — several legitimate exceptions exist',
+          'Max GDPR fine: €20M or 4% of global annual turnover (whichever is higher)',
+        ],
+        questions: [
+          { q: 'Under GDPR, within how many hours must a personal data breach be reported to the supervisory authority?', opts: ['24 hours', '48 hours', '72 hours', '7 days'], ans: 2, exp: 'GDPR Article 33 requires notification within 72 hours of becoming aware of a breach. If delayed, the reason must be explained. High-risk breaches must also be communicated directly to affected individuals.' },
+          { q: 'What are the six lawful bases for processing personal data under GDPR?', opts: ['Consent, Contract, Legal obligation, Vital interests, Public task, Legitimate interests', 'Consent, Contract, National security, Business need, Compliance, Research', 'Permission, Agreement, Public interest, Emergency, Transparency, Accuracy', 'Consent, Transparency, Minimisation, Accuracy, Storage limitation, Security'], ans: 0, exp: 'The six lawful bases are: Consent, Contract, Legal obligation, Vital interests, Public task, and Legitimate interests. Every processing activity must be grounded in one of these before it begins.' },
+          { q: 'What is the maximum fine for the most serious GDPR infringements?', opts: ['€5M or 1% of global turnover', '€10M or 2% of global turnover', '€20M or 4% of global annual turnover', '€50M or 10% of global turnover'], ans: 2, exp: 'The highest GDPR fines (for core violations including consent and data subject rights) are €20M or 4% of global annual turnover — whichever is higher. Notable fines: Meta (€1.2B in 2023), Amazon (€746M).' },
+          { q: 'The "right to be forgotten" under GDPR is best described as:', opts: ['An absolute right to delete all personal data immediately on request', 'A right to request erasure — which can be refused for legal obligations, public interest, or free expression', 'A right that only applies to data collected online', 'A right that only covers social media posts and profiles'], ans: 1, exp: 'GDPR Article 17 grants erasure rights but lists exceptions: legal claims, legal obligations, public interest tasks, and freedom of expression. The balance between privacy and free speech is frequently litigated.' },
+          { q: 'Who does the ICO regulate in the UK?', opts: ['Only government departments and public bodies', 'Only large tech companies operating in the UK', 'Any organisation processing personal data of UK residents', 'Only organisations with headquarters physically in the UK'], ans: 2, exp: 'The ICO (Information Commissioner\'s Office) is the UK\'s data protection regulator. It enforces UK GDPR and the DPA 2018 against any organisation processing UK residents\' personal data, regardless of where the organisation is based.' },
+          { q: 'A Data Protection Officer (DPO) is required under GDPR when:', opts: ['Any organisation has more than 10 employees', 'Only for organisations in the healthcare sector', 'An organisation is a public authority, or does large-scale systematic monitoring or processing of sensitive data', 'Only for organisations processing more than 1 million records'], ans: 2, exp: 'GDPR mandates a DPO for: (1) all public authorities, (2) organisations doing large-scale systematic monitoring, and (3) organisations processing large volumes of special category data (health, religious beliefs, etc.).' },
+          { q: 'GDPR\'s territorial scope applies to:', opts: ['Only organisations with headquarters in the EU', 'Any organisation processing personal data of EU residents, regardless of where the organisation is based', 'Only EU citizens\' data, wherever they are in the world', 'Only data processing physically occurring within EU borders'], ans: 1, exp: 'GDPR has broad extra-territorial scope (Article 3). A US company with no EU office is still subject to GDPR if it offers services to EU residents or monitors their behaviour. This is one of GDPR\'s most significant features.' },
+          { q: 'What does "data minimisation" mean under GDPR?', opts: ['Encrypting data to the minimum viable key length', 'Collecting only data that is adequate, relevant, and limited to what is necessary for the stated purpose', 'Retaining data for the minimum legally required period', 'Using the minimum number of third-party data processors'], ans: 1, exp: 'Data minimisation (Article 5(1)(c)) means organisations must not collect more personal data than they need. Collecting data "just in case it might be useful later" violates this principle.' },
+          { q: 'Special category data under GDPR includes:', opts: ['Financial data and credit history', 'Health data, racial/ethnic origin, religious beliefs, biometric data, and sexual orientation', 'Any data that is encrypted or pseudonymised', 'Data about all children under 16'], ans: 1, exp: 'Special category data (Article 9) is particularly sensitive and subject to stricter rules. It includes health, genetic and biometric data, racial/ethnic origin, political opinions, religious beliefs, trade union membership, and sexual orientation.' },
+          { q: 'Which GDPR principle requires data not be kept longer than necessary?', opts: ['Purpose limitation', 'Data minimisation', 'Storage limitation', 'Integrity and confidentiality'], ans: 2, exp: 'Storage limitation (Article 5(1)(e)) requires that personal data not be retained longer than necessary for its stated purpose. Organisations must have retention policies and delete data when it is no longer needed.' },
+        ],
+      },
+      {
+        id: 'leg2',
+        name: 'Cybercrime & Platform Law',
+        meta: 'CMA 1990, CFAA, Section 230, DSA & Online Safety Act',
+        flashcards: [
+          { term: 'Computer Misuse Act 1990 (UK)', def: 'Criminalises: (1) unauthorised access to computer material, (2) access with intent to commit further offences, (3) unauthorised modification of computer material. Amended 2015 for infrastructure attacks.' },
+          { term: 'CFAA (Computer Fraud and Abuse Act, US, 1986)', def: 'Broad US federal cybercrime law. Criminalises accessing "protected computers" without or in excess of authorisation. Criticised for overreach — "exceeds authorised access" interpreted very broadly.' },
+          { term: 'Section 230 (CDA, US, 1996)', def: 'Provides internet platforms immunity from liability for third-party content. Credited with enabling social media growth. Critics say it removes incentives to moderate harmful content.' },
+          { term: 'Digital Services Act (EU, 2022)', def: 'Regulates online platforms in the EU. Very Large Online Platforms (45M+ EU users) face: algorithmic transparency, annual risk assessments, bans on targeting minors with ads, prohibition of dark patterns.' },
+          { term: 'Online Safety Act (UK, 2023)', def: 'Imposes duty of care on platforms to protect users — especially children — from illegal and harmful content. Ofcom is the regulator. Fines up to 10% of global annual turnover.' },
+          { term: 'EU AI Act (2024)', def: 'World\'s first comprehensive AI regulation. Risk tiers: unacceptable (banned — social scoring, most biometric surveillance), high-risk (conformity assessment required), limited, and minimal risk.' },
+          { term: 'Investigatory Powers Act 2016 (UK)', def: '"Snoopers\' Charter." Legalises bulk collection of communications data; ISPs must retain browsing histories for 12 months. Ruled partially incompatible with the European Convention on Human Rights.' },
+        ],
+        concepts: [
+          'CMA 1990: three offences — unauthorised access, intent, modification',
+          'Section 230 = platform immunity for third-party user content (US)',
+          'DSA: Very Large Platforms (45M+ EU users) face the strictest obligations',
+          'EU AI Act: "unacceptable risk" AI is banned outright',
+        ],
+        questions: [
+          { q: 'The Computer Misuse Act 1990 (UK) created which three core offences?', opts: ['Hacking, identity theft, and digital fraud', 'Unauthorised access; access with intent to commit further offences; unauthorised modification', 'Cyberstalking, online harassment, and creating fake news', 'Data theft, ransomware deployment, and spyware installation'], ans: 1, exp: 'The CMA\'s three offences are: S1 (unauthorised access), S2 (unauthorised access with intent to facilitate further crimes), and S3 (unauthorised acts with intent to impair — e.g. deploying malware or launching DDoS). A 2015 amendment added attacks on critical national infrastructure.' },
+          { q: 'The US CFAA is criticised primarily because:', opts: ['It doesn\'t cover cloud computing or mobile devices', 'The "exceeds authorised access" clause is interpreted so broadly it may criminalise Terms of Service violations', 'It applies only to government computers, not the private sector', 'It has never been successfully used to prosecute a cybercriminal'], ans: 1, exp: 'The CFAA\'s "exceeds authorised access" clause has been interpreted by some courts to include violating a platform\'s Terms of Service — making ordinary users potential criminals. The Aaron Swartz case highlighted these concerns tragically.' },
+          { q: 'Section 230 of the Communications Decency Act protects platforms from:', opts: ['Criminal prosecution for content they publish themselves', 'Civil liability for content posted by third-party users', 'Government requests for user data without a warrant', 'Copyright infringement by users uploading copyrighted material'], ans: 1, exp: 'Section 230 says platforms are not treated as publishers of third-party content — giving them immunity from most civil claims about user posts. Without it, platforms would face unworkable liability for billions of posts.' },
+          { q: 'Under the EU Digital Services Act, which platforms face the strictest obligations?', opts: ['Any platform with paying subscribers in the EU', 'Very Large Online Platforms (VLOPs) with 45 million+ active EU users', 'Platforms owned by companies headquartered outside the EU', 'Any platform processing personal data of EU citizens'], ans: 1, exp: 'The DSA creates tiered obligations. VLOPs (Google, Meta, TikTok, Amazon etc.) face the strictest requirements: systemic risk assessments, independent audits, algorithmic transparency reports, and bans on targeting minors with ads.' },
+          { q: 'The UK Online Safety Act 2023 imposes what kind of obligation on platforms?', opts: ['Strict liability — platforms are liable for any harmful content regardless of knowledge', 'A duty of care to proactively assess and mitigate risks of illegal and harmful content', 'A content neutrality requirement — platforms must not moderate any lawful speech', 'A licensing requirement — all platforms must obtain Ofcom approval to operate in the UK'], ans: 1, exp: 'The Online Safety Act creates a duty of care requiring platforms to assess risks and take proportionate steps to address illegal and harmful content. Ofcom can impose fines of up to 10% of global turnover for serious breaches.' },
+          { q: 'The EU AI Act classifies which use case as "unacceptable risk" (banned outright)?', opts: ['AI used in medical devices for diagnosis support', 'AI-based social scoring by governments and most real-time biometric surveillance in public spaces', 'AI used for content moderation on social media platforms', 'AI for autonomous vehicle navigation systems'], ans: 1, exp: 'The unacceptable risk category bans: government social scoring, most real-time remote biometric surveillance in public spaces, subliminal manipulation, and systems exploiting specific group vulnerabilities — incompatible with fundamental rights.' },
+          { q: 'The Investigatory Powers Act 2016 requires UK ISPs to:', opts: ['Encrypt all customer data in transit using government-approved algorithms', 'Retain customers\' internet connection records (sites visited) for 12 months', 'Provide real-time access to private messages without a warrant', 'Block access to dark web sites for all UK internet users'], ans: 1, exp: 'The IPA 2016 requires ISPs to retain internet connection records for 12 months, accessible by a wide range of public authorities. The European Court of Human Rights has ruled aspects of related UK surveillance powers incompatible with privacy rights.' },
+          { q: 'What is the fundamental legal challenge in prosecuting cybercrime?', opts: ['Data sovereignty — each country controls only its own citizens\' data', 'Jurisdiction — determining which country\'s laws apply when attacker, servers, and victims are in different countries', 'Net neutrality — all internet traffic must be treated equally', 'Safe harbour — platforms are immune from prosecution outside their home country'], ans: 1, exp: 'Jurisdiction is the core challenge: attackers may be in one country, servers in a second, and victims in a third. Mutual Legal Assistance Treaties (MLATs) enable cooperation but are slow and politically complicated.' },
+          { q: 'The CLOUD Act (US, 2018) creates tensions with GDPR because:', opts: ['It requires US companies to delete EU data after 3 years', 'It allows US authorities to compel US companies to produce data stored abroad, potentially bypassing GDPR protections', 'It prevents European companies from accessing data held in US data centres', 'It mandates data localisation that conflicts with GDPR\'s free movement principle'], ans: 1, exp: 'The CLOUD Act allows US law enforcement to compel US companies (Google, Microsoft, Apple) to hand over data stored anywhere — including EU servers. This directly conflicts with GDPR\'s restrictions on cross-border data transfers.' },
+          { q: 'What was legally significant about Oracle v. Google (2021)?', opts: ['It established that software cannot be patented in the US', 'It ruled that Google\'s use of Java APIs in Android was fair use, limiting the scope of API copyright', 'It held that open-source licences are legally unenforceable contracts', 'It banned the practice of reverse engineering commercial software'], ans: 1, exp: 'The Supreme Court ruled (6-2) that Google\'s copying of ~11,500 lines of Java API declarations was fair use. This limited copyright holders\' ability to control how APIs are implemented — significant for software interoperability.' },
+        ],
+      },
+      {
+        id: 'leg3',
+        name: 'Copyright, Licensing & IP',
+        meta: 'Copyright, open source licences, patents & fair use',
+        flashcards: [
+          { term: 'Copyright', def: 'Automatically protects original creative works (code, text, music, images) from creation. Duration: life of author + 70 years. No registration required. Protects expression, not ideas.' },
+          { term: 'MIT License', def: 'Permissive open source licence. Can use, modify, distribute, and sell commercially. Only requirement: include the original copyright notice. No patent grant.' },
+          { term: 'GPL v3 (Copyleft)', def: '"Viral" licence: any distributed software incorporating GPL code must also be GPL and source code must be made available. Ensures open source remains open.' },
+          { term: 'Apache 2.0', def: 'Permissive licence that adds an explicit patent grant — contributors licence relevant patents to users. More legally protective than MIT.' },
+          { term: 'AGPL v3', def: 'Closes the "SaaS loophole" in GPL: providing GPL software as a network service counts as distribution — users must be able to access the source code.' },
+          { term: 'Fair Use / Fair Dealing', def: 'Limited use of copyrighted material without permission for commentary, criticism, education, parody, news. Determined case-by-case. Not an automatic right.' },
+          { term: 'Patent Troll (NPE)', def: 'Entity acquiring patents solely to litigate against operating companies, not to use in products. Exploits the high cost of patent litigation to extract settlements.' },
+          { term: 'DMCA Safe Harbour (Section 512)', def: 'Protects platforms hosting user content from copyright liability if they have a notice-and-takedown system and respond promptly to valid removal requests. Foundation of YouTube and GitHub.' },
+        ],
+        concepts: [
+          'MIT = permissive (minimal requirements); GPL = copyleft (viral)',
+          'Apache 2.0 adds patent protection that MIT does not provide',
+          'AGPL closes the SaaS loophole — network use = distribution',
+          'DMCA safe harbour = platform immunity for user-uploaded content',
+        ],
+        questions: [
+          { q: 'The MIT License is "permissive." What minimal requirement does it impose?', opts: ['All derivative works must also use the MIT License', 'The original copyright notice must be included in distributions', 'The source code must be made publicly available', 'Commercial use requires written permission from the original author'], ans: 1, exp: 'MIT is among the most permissive licences: use, copy, modify, sell, sublicense — the only requirement is that the original copyright notice is included. This makes it extremely business-friendly.' },
+          { q: 'What does "copyleft" mean in the context of the GPL?', opts: ['GPL-licensed software cannot be used commercially', 'Any distributed software incorporating GPL code must also be GPL — derivatives must remain open source', 'GPL gives the original author copyright over all future derivatives forever', 'GPL applies only to software distributed physically, not via internet download'], ans: 1, exp: 'Copyleft (or "viral licensing") means GPL\'s terms propagate to any software incorporating GPL code that is then distributed. The entire work must be licensed under the GPL and source code made available.' },
+          { q: 'What key protection does Apache 2.0 provide that MIT does not?', opts: ['Stronger copyright protection for documentation', 'An explicit patent grant — contributors licence relevant patents to users of the software', 'Commercial use is unrestricted under Apache 2.0 but limited under MIT', 'Apache 2.0 allows proprietary derivatives; MIT does not'], ans: 1, exp: 'Apache 2.0 includes a patent grant: all contributors grant users a royalty-free licence to any patents they hold covering the software. This protects users from patent claims by contributors — absent from MIT.' },
+          { q: 'The AGPL ("Affero GPL") closes which loophole in standard GPL?', opts: ['The "internal use" loophole — companies using GPL internally needn\'t share source', 'The "SaaS loophole" — providing software as a network service triggered no GPL source-sharing obligations', 'The "library loophole" — dynamic linking avoided GPL copyleft', 'The "BSD exception" — combining GPL with permissive code'], ans: 1, exp: 'Under GPL, running software on a server and letting users interact via a network was not "distribution" — so source didn\'t need to be shared. AGPL closes this by requiring source sharing when users interact with the software over a network.' },
+          { q: 'DMCA Section 512 safe harbour protects platforms from copyright liability provided they:', opts: ['Proactively scan all user content for copyright infringement', 'Have a notice-and-takedown system and respond promptly to valid removal requests', 'Only allow registered, verified users to upload content', 'Use licensed content detection technology like YouTube\'s Content ID'], ans: 1, exp: 'Safe harbour requires: no knowledge of infringement, no financial benefit from specific infringement, and expeditious response to valid DMCA takedowns. Without it, user-generated content platforms would face unworkable liability.' },
+          { q: 'Fair use / fair dealing allows limited use of copyrighted material for:', opts: ['Any non-commercial purpose', 'Commentary, criticism, education, parody, and news — determined case-by-case', 'Any purpose as long as no money is made', 'Any purpose as long as the author is attributed'], ans: 1, exp: 'Fair use is a flexible doctrine assessed on factors including purpose (commercial vs educational), nature of the work, amount taken, and effect on the market. It is not automatic — it must be argued and assessed case by case.' },
+          { q: 'A patent troll (NPE) is best described as:', opts: ['A hacker group that steals patented source code', 'An entity that acquires patents solely to litigate against operating companies, not to use in products', 'A government body that holds encryption patents for national security use', 'A law firm specialising in prosecuting software copyright infringement'], ans: 1, exp: 'Patent trolls (Non-Practising Entities) make money from litigation, not innovation. They accumulate broad patents and sue operating companies — often smaller ones — exploiting the high cost of patent defence as leverage to force settlements.' },
+          { q: 'Copyright in software protects which of the following?', opts: ['The functionality or algorithm underlying the code', 'The specific expression of code — the actual source code written', 'The name and branding of the software application', 'The user interface design and layout'], ans: 1, exp: 'Copyright protects the specific expression — the code as written. It does not protect the underlying idea, algorithm, or functionality (those may be protected by patents separately). This is the "idea-expression dichotomy" in software IP law.' },
+          { q: 'Oracle v. Google (2021) was significant for software developers because:', opts: ['It ruled all open-source licences are legally binding contracts', 'Google\'s use of Java API declarations in Android was ruled fair use, limiting the scope of API copyright', 'Oracle won, establishing that all APIs are fully and broadly copyrightable', 'It banned software patents in a Supreme Court ruling'], ans: 1, exp: 'The 6-2 ruling that Google\'s use of Java APIs was fair use was a major win for software interoperability. It limited the ability to use copyright to control how APIs — the interfaces making software work together — are independently implemented.' },
+          { q: 'Which licence is best for a company wanting to use open source code in a proprietary commercial product without open-sourcing the product?', opts: ['GPL v3', 'AGPL v3', 'MIT or Apache 2.0', 'LGPL v3'], ans: 2, exp: 'MIT and Apache 2.0 are permissive — they allow incorporation into proprietary products without triggering any copyleft obligations. GPL and AGPL are copyleft and would require the entire distributed product to also be open-sourced.' },
+        ],
+      },
+    ],
+  },
+];
+
+/* ═══════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════ */
+let S = {
+  bestStreak: 0,
+  totalQ: 0,
+  totalXP: 0,
+  lessonProgress: {},
+  // session
+  currentLesson: null,
+  currentChapter: null,
+  fcIndex: 0,
+  fcFlipped: false,
+  questions: [],
+  qIndex: 0,
+  score: 0,
+  streak: 0,
+  sessionStreak: 0,
+  wrongQs: [],
+  answered: false,
+  sessionXP: 0,
+};
+
+function loadState() {
+  try {
+    const d = JSON.parse(localStorage.getItem('csil_v1') || '{}');
+    S.bestStreak = d.bestStreak || 0;
+    S.totalQ = d.totalQ || 0;
+    S.totalXP = d.totalXP || 0;
+    S.lessonProgress = d.lessonProgress || {};
+  } catch (e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('csil_v1', JSON.stringify({
+      bestStreak: S.bestStreak,
+      totalQ: S.totalQ,
+      totalXP: S.totalXP,
+      lessonProgress: S.lessonProgress,
+    }));
+  } catch (e) {}
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN HELPERS
+═══════════════════════════════════════════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HUB
+═══════════════════════════════════════════════════════════ */
+function buildHub() {
+  const cl = document.getElementById('chapters-list');
+  cl.innerHTML = '';
+  CHAPTERS.forEach(ch => {
+    const done = ch.lessons.filter(l => (S.lessonProgress[l.id] || {}).done).length;
+    let html = `
+      <div class="chapter-block">
+        <div class="ch-header">
+          <div class="ch-icon" style="background:${ch.bg};border:1px solid ${ch.bd}">${ch.icon}</div>
+          <div>
+            <div class="ch-name">${ch.name}</div>
+            <div class="ch-sub">${done}/${ch.lessons.length} lessons complete</div>
+          </div>
+        </div>
+        <div class="lessons-list">`;
+    ch.lessons.forEach(l => {
+      const prog = S.lessonProgress[l.id] || {};
+      const best = prog.best || 0;
+      const total = l.questions.length;
+      const pct = best > 0 ? Math.min(100, Math.round((best / total) * 100)) : 0;
+      const badgeStyle = prog.done
+        ? `background:${ch.bg};color:${ch.color};border:1px solid ${ch.bd}`
+        : best > 0
+          ? `background:${ch.bg};color:${ch.color};border:1px solid ${ch.bd}`
+          : 'background:rgba(255,255,255,0.04);color:#7a7a99;border:1px solid rgba(255,255,255,0.07)';
+      const badgeLabel = prog.done ? '✓ Done' : best > 0 ? `${best}/${total}` : 'Start';
+      html += `
+        <div class="lesson-row" onclick="openLesson('${ch.id}','${l.id}')">
+          <div class="lesson-dot" style="background:${ch.color}"></div>
+          <div class="lesson-info">
+            <div class="lesson-name">${l.name}</div>
+            <div class="lesson-meta">${l.meta} &nbsp;·&nbsp; ${l.flashcards.length} cards &nbsp;·&nbsp; ${total} questions</div>
+            ${pct > 0 ? `<div class="lesson-prog-wrap"><div class="lesson-prog-fill" style="width:${pct}%;background:${ch.color}"></div></div>` : ''}
+          </div>
+          <span class="lesson-badge" style="${badgeStyle}">${badgeLabel}</span>
+        </div>`;
+    });
+    html += '</div></div>';
+    cl.innerHTML += html;
+  });
+}
+
+function goHub() {
+  updateNavStats();
+  buildHub();
+  showScreen('hub');
+}
+
+function updateNavStats() {
+  document.getElementById('nav-streak').textContent = S.bestStreak;
+  document.getElementById('nav-xp').textContent = S.totalXP;
+  document.getElementById('h-streak').textContent = S.bestStreak;
+  document.getElementById('h-total').textContent = S.totalQ;
+  document.getElementById('h-xp').textContent = S.totalXP;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FLASHCARD SCREEN
+═══════════════════════════════════════════════════════════ */
+function openLesson(chId, lesId) {
+  const ch = CHAPTERS.find(c => c.id === chId);
+  const les = ch.lessons.find(l => l.id === lesId);
+  S.currentChapter = ch;
+  S.currentLesson = les;
+  S.fcIndex = 0;
+  S.fcFlipped = false;
+
+  document.getElementById('fc-lesson-name').textContent = les.name;
+
+  // concepts panel
+  document.getElementById('fc-concepts').innerHTML =
+    `<div class="fc-kc-title">What you'll learn</div>` +
+    les.concepts.map(c =>
+      `<div class="fc-kc-item"><div class="fc-kc-bullet"></div><span>${c}</span></div>`
+    ).join('');
+
+  renderFC();
+  showScreen('fc');
+}
+
+function renderFC() {
+  const { ch, les } = { ch: S.currentChapter, les: S.currentLesson };
+  const cards = les.flashcards;
+  const i = S.fcIndex;
+  const card = cards[i];
+
+  // dot progress
+  document.getElementById('fc-dots').innerHTML = cards.map((_, j) =>
+    `<div class="fc-dot" style="background:${j === i ? ch.color : j < i ? ch.bg : 'rgba(255,255,255,0.07)'}"></div>`
+  ).join('');
+  document.getElementById('fc-count').textContent = (i + 1) + ' / ' + cards.length;
+
+  // reset flip
+  document.getElementById('fc-card').classList.remove('flipped');
+  S.fcFlipped = false;
+
+  // front
+  document.getElementById('fc-front-tag').textContent = 'Term';
+  document.getElementById('fc-front-tag').style.color = ch.color;
+  document.getElementById('fc-front-term').textContent = card.term;
+
+  // back
+  document.getElementById('fc-back-tag').textContent = 'Definition';
+  document.getElementById('fc-back-tag').style.color = ch.color;
+  document.getElementById('fc-back-def').textContent = card.def;
+
+  document.getElementById('fc-prev').disabled = i === 0;
+  document.getElementById('fc-next').disabled = i === cards.length - 1;
+}
+
+function flipCard() {
+  S.fcFlipped = !S.fcFlipped;
+  document.getElementById('fc-card').classList.toggle('flipped', S.fcFlipped);
+}
+
+function fcNav(dir) {
+  S.fcIndex = Math.max(0, Math.min(S.currentLesson.flashcards.length - 1, S.fcIndex + dir));
+  renderFC();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   QUIZ
+═══════════════════════════════════════════════════════════ */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz() {
+  const les = S.currentLesson;
+  const ch = S.currentChapter;
+  S.questions = shuffle(les.questions);
+  S.qIndex = 0;
+  S.score = 0;
+  S.streak = 0;
+  S.sessionStreak = 0;
+  S.wrongQs = [];
+  S.answered = false;
+  S.sessionXP = 0;
+  showScreen('game');
+  renderQ();
+}
+
+function retryLesson() {
+  if (S.currentLesson) startQuiz();
+}
+
+function renderQ() {
+  const ch = S.currentChapter;
+  const les = S.currentLesson;
+  const q = S.questions[S.qIndex];
+  const total = S.questions.length;
+  const pct = (S.qIndex / total) * 100;
+
+  document.getElementById('g-prog').style.width = pct + '%';
+  document.getElementById('g-qcount').textContent = (S.qIndex + 1) + '/' + total;
+
+  // streak banner
+  const sb = document.getElementById('g-streak');
+  if (S.streak >= 3) {
+    sb.classList.add('show');
+    document.getElementById('g-streak-txt').textContent = S.streak + ' in a row!';
+  } else {
+    sb.classList.remove('show');
+  }
+
+  // topic pill
+  document.getElementById('g-pill').innerHTML =
+    `<span class="topic-pill" style="background:${ch.bg};color:${ch.color};border:1px solid ${ch.bd}">${ch.icon} ${les.name}</span>`;
+
+  document.getElementById('g-qtxt').textContent = q.q;
+
+  const letters = ['A', 'B', 'C', 'D'];
+  document.getElementById('g-opts').innerHTML = q.opts.map((o, i) =>
+    `<button class="opt" onclick="selectA(${i})">
+       <span class="ol">${letters[i]}</span>
+       <span>${o}</span>
+     </button>`
+  ).join('');
+
+  document.getElementById('g-fb').classList.remove('show', 'cfb', 'wfb');
+  document.getElementById('g-cont').classList.remove('show');
+  S.answered = false;
+}
+
+function selectA(idx) {
+  if (S.answered) return;
+  S.answered = true;
+
+  const q = S.questions[S.qIndex];
+  const btns = document.querySelectorAll('.opt');
+  btns.forEach(b => b.setAttribute('disabled', 'true'));
+
+  if (idx === q.ans) {
+    // correct
+    btns[idx].classList.add('correct');
+    S.score++;
+    S.streak++;
+    S.sessionStreak = Math.max(S.sessionStreak, S.streak);
+    S.bestStreak = Math.max(S.bestStreak, S.streak);
+    const xp = 10 + (S.streak >= 3 ? 5 : 0);
+    S.totalXP += xp;
+    S.sessionXP += xp;
+    S.totalQ++;
+
+    const fb = document.getElementById('g-fb');
+    fb.className = 'fb-box show cfb';
+    document.getElementById('g-fb-t').textContent = S.streak >= 3 ? '🔥 ' + S.streak + ' in a row!' : 'Correct!';
+    document.getElementById('g-fb-b').textContent = q.exp;
+
+    if (S.streak > 0 && S.streak % 3 === 0) showCombo('🔥 ' + S.streak + ' streak!');
+
+    saveState();
+    updateNavStats();
+
+    const cont = document.getElementById('g-cont');
+    cont.textContent = S.qIndex + 1 < S.questions.length ? 'Continue →' : 'See results';
+    cont.classList.add('show');
+  } else {
+    // wrong
+    btns[idx].classList.add('wrong');
+    btns[q.ans].classList.add('correct');
+    S.streak = 0;
+
+    const fb = document.getElementById('g-fb');
+    fb.className = 'fb-box show wfb';
+    document.getElementById('g-fb-t').textContent = 'Not quite — run over';
+    document.getElementById('g-fb-b').textContent = q.exp;
+
+    S.wrongQs.push(q);
+    saveState();
+
+    setTimeout(showGameOver, 1800);
+  }
+}
+
+function nextQ() {
+  S.qIndex++;
+  if (S.qIndex >= S.questions.length) {
+    showGameOver();
+  } else {
+    renderQ();
+  }
+}
+
+function showGameOver() {
+  const les = S.currentLesson;
+  const correct = S.score;
+  const total = S.questions.length;
+  const attempted = correct + S.wrongQs.length;
+  const acc = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
+  const perfect = S.wrongQs.length === 0 && correct > 0;
+
+  // save progress
+  const prev = S.lessonProgress[les.id] || {};
+  S.lessonProgress[les.id] = {
+    best: Math.max(prev.best || 0, correct),
+    done: perfect || (prev.done || false),
+  };
+  saveState();
+
+  document.getElementById('go-ico').textContent = perfect ? '🏆' : (correct >= 7 ? '😊' : correct >= 4 ? '🙂' : '😓');
+  document.getElementById('go-ttl').textContent = perfect ? 'Perfect run!' : correct >= 7 ? 'Great work!' : correct >= 4 ? 'Good effort!' : 'Keep practising';
+  document.getElementById('go-sub').textContent = perfect
+    ? 'You answered every question correctly — exceptional!'
+    : 'You answered ' + correct + ' question' + (correct !== 1 ? 's' : '') + ' correctly before making a mistake. Review below and try again!';
+  document.getElementById('go-sc').textContent = correct;
+  document.getElementById('go-str').textContent = S.sessionStreak;
+  document.getElementById('go-xp').textContent = '+' + S.sessionXP;
+  document.getElementById('go-acc').textContent = acc + '%';
+
+  const rev = document.getElementById('go-review');
+  if (S.wrongQs.length > 0) {
+    rev.innerHTML = '<div class="review-title">Review — what to study next</div>' +
+      S.wrongQs.slice(0, 3).map(q =>
+        `<div class="wrong-item">
+           <strong>${q.q}</strong>
+           Correct answer: ${q.opts[q.ans]}
+         </div>`
+      ).join('');
+  } else {
+    rev.innerHTML = '';
+  }
+
+  showScreen('go');
+}
+
+function showCombo(text) {
+  const el = document.getElementById('combo-pop');
+  el.textContent = text;
+  el.className = 'combo-pop pop';
+  setTimeout(() => el.classList.add('fade'), 800);
+  setTimeout(() => { el.className = 'combo-pop'; }, 1200);
+}
+
+/* ── scroll progress bar ── */
+window.addEventListener('scroll', () => {
+  const d = document.documentElement;
+  const pct = d.scrollTop / (d.scrollHeight - d.clientHeight) * 100;
+  document.getElementById('page-progress').style.width = Math.round(pct) + '%';
+});
+
+/* ── init ── */
+loadState();
+updateNavStats();
+buildHub();
+</script>
+</body>
+</html>
